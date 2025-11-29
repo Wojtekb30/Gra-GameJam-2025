@@ -1,43 +1,46 @@
 using UnityEngine;
 
-// Wymaga, żeby na obiekcie być CharacterController
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Ruch")]
-    public float moveSpeed = 5f;      // prędkość chodzenia
+    public float moveSpeed = 5f;
 
     [Header("Skakanie i grawitacja")]
-    public float gravity = -9.81f;    // grawitacja (musi być ujemna)
-    public float jumpHeight = 1.5f;   // wysokość skoku
+    public float gravity = -9.81f;
+    public float jumpHeight = 1.5f;
 
     [Header("Patrzenie (myszka)")]
-    public Transform cameraHolder;    // przypisz obiekt trzymający kamerę (dziecko Player)
+    public Transform cameraHolder;
     public float mouseSensitivity = 100f;
     public bool invertY = false;
     public float minPitch = -75f;
     public float maxPitch = 75f;
 
+    // ----------------------------------------
+    // 🟩 NEW: Reference to slot machine script
+    // ----------------------------------------
+    [Header("Interaction")]
+    public SlotMachineScriptWoj slotMachine;
+    // ----------------------------------------
+
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
-    private float pitch = 0f; // obrót kamery wokół X
-    private float yaw = 0f;   // obrót gracza wokół Y
+    private float pitch = 0f;
+    private float yaw = 0f;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        // ustaw początkowy yaw na obecną rotację obiektu
         yaw = transform.eulerAngles.y;
 
-        // jeśli cameraHolder nie jest ustawiony, spróbuj znaleźć kamerę w dzieciach
         if (cameraHolder == null)
         {
             Camera cam = GetComponentInChildren<Camera>();
             if (cam != null) cameraHolder = cam.transform;
         }
 
-        // schowaj i zablokuj kursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -46,6 +49,22 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleMouseLook();
         HandleMovement();
+
+        // ----------------------------------------
+        // 🟩 NEW: Press E to start the slot machine
+        // ----------------------------------------
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (slotMachine != null)
+            {
+                slotMachine.TriggerSpin();
+            }
+            else
+            {
+                Debug.LogWarning("SlotMachineScriptWoj reference not assigned in PlayerMovement!");
+            }
+        }
+        // ----------------------------------------
     }
 
     void HandleMouseLook()
@@ -58,10 +77,8 @@ public class PlayerMovement : MonoBehaviour
 
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-        // Obrót gracza (yaw)
         transform.rotation = Quaternion.Euler(0f, yaw, 0f);
 
-        // Obrót kamery (pitch) względem cameraHolder lokalnie
         if (cameraHolder != null)
             cameraHolder.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
@@ -71,9 +88,7 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = controller.isGrounded;
 
         if (isGrounded && velocity.y < 0)
-        {
             velocity.y = -2f;
-        }
 
         float inputX = Input.GetAxis("Horizontal");
         float inputZ = Input.GetAxis("Vertical");
@@ -82,15 +97,12 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(move * moveSpeed * Time.deltaTime);
 
         if (Input.GetButtonDown("Jump") && isGrounded)
-        {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
-    // Opcjonalnie: odblokowanie kursora po naciśnięciu Esc
     void OnGUI()
     {
         if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
