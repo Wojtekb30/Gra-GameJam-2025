@@ -483,7 +483,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 5
   gravity: -9.81
-  jumpHeight: 1.5
+  jumpHeight: 0.5
+  cameraHolder: {fileID: 0}
+  mouseSensitivity: 100
+  invertY: 0
+  minPitch: -75
+  maxPitch: 75
 --- !u!1 &1580968464
 GameObject:
   m_ObjectHideFlags: 0
