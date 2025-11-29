@@ -17,12 +17,8 @@ public class PlayerMovement : MonoBehaviour
     public float minPitch = -75f;
     public float maxPitch = 75f;
 
-    // ----------------------------------------
-    // 🟩 NEW: Reference to slot machine script
-    // ----------------------------------------
     [Header("Interaction")]
     public SlotMachineScriptWoj slotMachine;
-    // ----------------------------------------
 
     private CharacterController controller;
     private Vector3 velocity;
@@ -51,7 +47,7 @@ public class PlayerMovement : MonoBehaviour
         HandleMovement();
 
         // ----------------------------------------
-        // 🟩 NEW: Press E to start the slot machine
+        // Press E to start slot machine
         // ----------------------------------------
         if (Input.GetKeyDown(KeyCode.E))
         {
@@ -64,7 +60,18 @@ public class PlayerMovement : MonoBehaviour
                 Debug.LogWarning("SlotMachineScriptWoj reference not assigned in PlayerMovement!");
             }
         }
+
         // ----------------------------------------
+        // 🟥 NEW: Press Escape to quit the game
+        // ----------------------------------------
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+        }
     }
 
     void HandleMouseLook()
@@ -101,14 +108,5 @@ public class PlayerMovement : MonoBehaviour
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
-    }
-
-    void OnGUI()
-    {
-        if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
     }
 }
