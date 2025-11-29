@@ -4531,6 +4531,7 @@ MonoBehaviour:
   moveSpeed: 5
   gravity: -9.81
   jumpHeight: 1.5
+<<<<<<< HEAD
 --- !u!64 &1455941696
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4553,6 +4554,8 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
+=======
+>>>>>>> parent of fdea7f9 (mouse movement script)
 --- !u!1 &1580968464
 GameObject:
   m_ObjectHideFlags: 0
