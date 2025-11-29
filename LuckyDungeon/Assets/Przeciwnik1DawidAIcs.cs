@@ -56,6 +56,12 @@ public class Przeciwnik1DawidAIcs : MonoBehaviour
         {
             Debug.Log("Wróg dotkn¹³ gracza -> otrzymuje 100 dmg.");
             TakeDamage(100);
+            //PlayerHealth ph = other.GetComponentInParent<PlayerHealth>();
+            //if (ph != null)
+            //{
+            //    ph.TakeDamage(20);
+            //}
+
         }
     }
 }
