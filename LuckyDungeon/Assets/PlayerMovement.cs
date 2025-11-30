@@ -55,10 +55,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 slotMachine.TriggerSpin();
             }
-            else
-            {
-                Debug.LogWarning("SlotMachineScriptWoj reference not assigned in PlayerMovement!");
-            }
+
         }
 
         // ----------------------------------------
