@@ -85,6 +85,8 @@ public class SlotMachineScriptWoj : MonoBehaviour
         if (useResourcesFallback)
             EnsureSprites();
 
+        pt.SubtractTime(20);
+
         ApplyVisibility();
     }
 
@@ -165,7 +167,7 @@ public class SlotMachineScriptWoj : MonoBehaviour
         }
 
         // Only subtract time if we actually resolved a PlayerTime component
-        pt.SubtractTime(20);
+        //pt.SubtractTime(20);
 
         rootVisible = false;
         slot1visible = slot2visible = slot3visible = false;

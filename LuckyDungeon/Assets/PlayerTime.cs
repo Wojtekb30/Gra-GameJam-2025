@@ -13,17 +13,18 @@ public class PlayerTime : MonoBehaviour
     [Tooltip("Optional TextMeshProUGUI element to display time")]
     public TextMeshProUGUI timeText;
 
-    // Current time in whole seconds
-    private int currentTime;
+    // ---------- Persistent static fields ----------
+    // int.MinValue works as a sentinel that tells us the timer has never been initialised.
+    private static int  s_sharedMaxTime       = int.MinValue;
+    private static int  s_sharedCurrentTime   = int.MinValue;
+    private static float s_sharedSecondTimer   = 0f;
+    // ----------------------------------------------
 
     // Event fired when time changes: (currentSeconds, maxSeconds)
-    public event Action<int,int> OnTimeChanged;
+    public event Action<int, int> OnTimeChanged;
 
     // Event fired when timer reaches zero
     public event Action OnTimeExpired;
-
-    // Internal accumulator to track fractional seconds
-    private float secondTimer = 0f;
 
     void Reset()
     {
@@ -31,27 +32,48 @@ public class PlayerTime : MonoBehaviour
         startTime = 100;
     }
 
+    void Awake()
+    {
+        // First instance ever created – initialise the static values.
+        if (s_sharedMaxTime == int.MinValue)
+        {
+            s_sharedMaxTime       = Mathf.Max(1, maxTime);
+            s_sharedCurrentTime   = Mathf.Clamp(startTime, 0, s_sharedMaxTime);
+            s_sharedSecondTimer   = 0f;
+        }
+        else
+        {
+            // Subsequent instances just adopt the already‑saved values.
+            maxTime = s_sharedMaxTime;
+        }
+    }
+
     void Start()
     {
+        // Ensure maxTime is never below 1 (in case it was changed in the inspector).
         if (maxTime < 1) maxTime = 1;
-        currentTime = Mathf.Clamp(startTime, 0, maxTime);
+
+        // Keep the static values in sync if the inspector changed them before the first scene load.
+        // Do **not** reset currentTime – we want the persisted value to survive scene changes.
+        s_sharedMaxTime = maxTime;
+
         UpdateTimeUI();
     }
 
     void Update()
     {
-        if (currentTime <= 0) return;
+        if (s_sharedCurrentTime <= 0) return;
 
-        secondTimer += Time.deltaTime;
-        while (secondTimer >= 1f && currentTime > 0)
+        s_sharedSecondTimer += Time.deltaTime;
+        while (s_sharedSecondTimer >= 1f && s_sharedCurrentTime > 0)
         {
-            secondTimer -= 1f;
-            currentTime--;
+            s_sharedSecondTimer -= 1f;
+            s_sharedCurrentTime--;
             NotifyChanged();
 
-            if (currentTime <= 0)
+            if (s_sharedCurrentTime <= 0)
             {
-                currentTime = 0;
+                s_sharedCurrentTime = 0;
                 OnTimeExpired?.Invoke();
                 break;
             }
@@ -62,23 +84,23 @@ public class PlayerTime : MonoBehaviour
     public int AddTime(int seconds)
     {
         if (seconds <= 0) return 0;
-        int before = currentTime;
-        currentTime = Mathf.Clamp(currentTime + seconds, 0, maxTime);
-        int added = currentTime - before;
+        int before = s_sharedCurrentTime;
+        s_sharedCurrentTime = Mathf.Clamp(s_sharedCurrentTime + seconds, 0, s_sharedMaxTime);
+        int added = s_sharedCurrentTime - before;
         if (added > 0) NotifyChanged();
         return added;
     }
+
     public int SubtractTime(int seconds)
     {
         if (seconds <= 0) return 0;
-        int before = currentTime;
-        currentTime = Mathf.Clamp(currentTime - seconds, 0, maxTime);
-        int subtracted = before - currentTime;
-         if (subtracted > 0) NotifyChanged();
-        if (currentTime == 0) OnTimeExpired?.Invoke();
-      return subtracted;
+        int before = s_sharedCurrentTime;
+        s_sharedCurrentTime = Mathf.Clamp(s_sharedCurrentTime - seconds, 0, s_sharedMaxTime);
+        int subtracted = before - s_sharedCurrentTime;
+        if (subtracted > 0) NotifyChanged();
+        if (s_sharedCurrentTime == 0) OnTimeExpired?.Invoke();
+        return subtracted;
     }
-
 
     public void SetMaxTime(int newMax, bool preservePercentage = true)
     {
@@ -86,31 +108,31 @@ public class PlayerTime : MonoBehaviour
 
         if (preservePercentage)
         {
-            float pct = (float)currentTime / maxTime;
-            maxTime = newMax;
-            currentTime = Mathf.Clamp(Mathf.RoundToInt(pct * maxTime), 0, maxTime);
+            float pct = (float)s_sharedCurrentTime / s_sharedMaxTime;
+            s_sharedMaxTime = newMax;
+            s_sharedCurrentTime = Mathf.Clamp(Mathf.RoundToInt(pct * s_sharedMaxTime), 0, s_sharedMaxTime);
         }
         else
         {
-            maxTime = newMax;
-            currentTime = Mathf.Clamp(currentTime, 0, maxTime);
+            s_sharedMaxTime = newMax;
+            s_sharedCurrentTime = Mathf.Clamp(s_sharedCurrentTime, 0, s_sharedMaxTime);
         }
 
         NotifyChanged();
     }
 
-    public int GetCurrentTime() => currentTime;
-    public int GetMaxTime() => maxTime;
+    public int GetCurrentTime() => s_sharedCurrentTime;
+    public int GetMaxTime() => s_sharedMaxTime;
 
     void NotifyChanged()
     {
         UpdateTimeUI();
-        OnTimeChanged?.Invoke(currentTime, maxTime);
+        OnTimeChanged?.Invoke(s_sharedCurrentTime, s_sharedMaxTime);
     }
 
     void UpdateTimeUI()
     {
         if (timeText != null)
-            timeText.text = $"Time: {currentTime}/{maxTime}";
+            timeText.text = $"Time: {s_sharedCurrentTime}/{s_sharedMaxTime}";
     }
 }
