@@ -9,6 +9,9 @@ public class PlayerHealth : MonoBehaviour
     public int currentHealth;
     public TextMeshProUGUI healthTextUI;
 
+    // Event to notify listeners that the player died
+    public event Action OnDied;
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -18,7 +21,7 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(int dmg)
     {
         currentHealth -= dmg;
-        Debug.Log("Gracz otrzyma� " + dmg + " obra�e�. Aktualne zdrowie: " + currentHealth);
+        Debug.Log("Gracz otrzymał " + dmg + " obrażeń. Aktualne zdrowie: " + currentHealth);
 
         if (currentHealth <= 0)
         {
@@ -41,8 +44,9 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Gracz umar�!");
-        // TODO: tu mo�esz da� respawn, ekran �mierci itp.
+        Debug.Log("Gracz umarł!");
+        OnDied?.Invoke();
+        // TODO: respawn, death screen etc. GameUIController will show the lose panel if present.
     }
 
     void UpdateHealthUI()
