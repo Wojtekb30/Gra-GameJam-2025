@@ -9,6 +9,14 @@ public class IntArrayEvent : UnityEvent<int[]> { }
 
 public class SlotMachineScriptWoj : MonoBehaviour
 {
+    // --- SINGLETON GUARD ---
+    private static SlotMachineScriptWoj activeInstance;
+
+    [Header("Singleton")]
+    [Tooltip("If true the slot machine GameObject will be destroyed after the player accepts. " +
+             "If false (default) the machine will be hidden and kept in the scene so other enemies/objects that reference it won't lose the reference.")]
+    public bool destroyOnAccept = false;
+
     public PlayerTime playerTime;               // assign in inspector (optional)
 
     [Header("Symbol Settings")]
@@ -35,6 +43,10 @@ public class SlotMachineScriptWoj : MonoBehaviour
     public IntArrayEvent OnSpinResult;
     public event Action<int[]> SpinResultEvent;
 
+    [Header("Accept Events")]
+    public UnityEvent OnAccept;
+    public IntArrayEvent OnAcceptResult;
+
     [Header("Other")]
     public CanvasGroup canvasGroup;
     public Sprite emptySprite;
@@ -47,13 +59,23 @@ public class SlotMachineScriptWoj : MonoBehaviour
     private Transform slot2Transform;
     private Transform slot3Transform;
 
-    // <-- the corrected reference
+    // PlayerTime reference (may be null)
     private PlayerTime pt;
 
     private static readonly string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     void Awake()
     {
+        // --- Singleton guard: only allow one instance at a time ---
+        if (activeInstance != null && activeInstance != this)
+        {
+            Debug.LogWarning($"[{name}] Another SlotMachineScriptWoj is already active on '{activeInstance.name}'. Destroying this new instance to avoid duplicates.");
+            Destroy(gameObject);
+            return;
+        }
+
+        activeInstance = this;
+
         // Resolve PlayerTime reference
         if (playerTime != null)
             pt = playerTime;
@@ -85,9 +107,17 @@ public class SlotMachineScriptWoj : MonoBehaviour
         if (useResourcesFallback)
             EnsureSprites();
 
-        pt.SubtractTime(20);
+        // Initial time subtraction (kept from earlier script)
+        pt?.SubtractTime(20);
 
         ApplyVisibility();
+    }
+
+    void OnDestroy()
+    {
+        // Clear static reference when destroyed so a new instance can become active later
+        if (activeInstance == this)
+            activeInstance = null;
     }
 
     /// <summary>
@@ -120,6 +150,8 @@ public class SlotMachineScriptWoj : MonoBehaviour
 
     void ApplyVisibility()
     {
+        if (canvasGroup == null) return;
+
         canvasGroup.alpha = rootVisible ? 1 : 0;
         canvasGroup.interactable = rootVisible;
         canvasGroup.blocksRaycasts = rootVisible;
@@ -131,19 +163,21 @@ public class SlotMachineScriptWoj : MonoBehaviour
 
     public void TriggerSpin()
     {
+        // Prevent starting a spin on a destroyed/invalid singleton
+        if (activeInstance != this)
+            return;
+
+        // Ensure the machine is active in case it was hidden previously
+        if (!gameObject.activeInHierarchy)
+            gameObject.SetActive(true);
+
         StopAllCoroutines();
         StartCoroutine(SpinRoutine());
     }
 
-    IEnumerator SpinRoutine()
+    // Helper: immediately randomize and display (returns the int[] result)
+    int[] DoRandomizeAndDisplay()
     {
-        rootVisible = true;
-        slot1visible = slot2visible = slot3visible = true;
-        ApplyVisibility();
-
-        yield return new WaitForSeconds(prePickDelay);
-
-        // 1..symbolCount (inclusive)
         int r1 = UnityEngine.Random.Range(1, symbolCount + 1);
         int r2 = UnityEngine.Random.Range(1, symbolCount + 1);
         int r3 = UnityEngine.Random.Range(1, symbolCount + 1);
@@ -154,11 +188,81 @@ public class SlotMachineScriptWoj : MonoBehaviour
         SetSlotSprite(slot2Image, r2);
         SetSlotSprite(slot3Image, r3);
 
+        return results;
+    }
+
+    IEnumerator SpinRoutine()
+    {
+        // Start visible and run the first "reveal"
+        rootVisible = true;
+        slot1visible = slot2visible = slot3visible = true;
+        ApplyVisibility();
+
+        yield return new WaitForSeconds(prePickDelay);
+
+        int[] results = DoRandomizeAndDisplay();
+
+        // Notify listeners about the spin result
         OnSpinResult?.Invoke(results);
         SpinResultEvent?.Invoke(results);
 
-        yield return new WaitForSeconds(postResultDelay);
+        // Now wait for player input. R = reroll, E = accept.
+        bool accepted = false;
+        while (!accepted)
+        {
+            // Reroll pressed
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                // Subtract time for every reroll
+                pt?.SubtractTime(20);
 
+                // Play the "hide old -> show animation -> reveal new" flow
+
+                // 1) Hide current display immediately (simulate hide animation)
+                if (emptySprite)
+                {
+                    if (slot1Image) slot1Image.sprite = emptySprite;
+                    if (slot2Image) slot2Image.sprite = emptySprite;
+                    if (slot3Image) slot3Image.sprite = emptySprite;
+                }
+
+                rootVisible = false;
+                slot1visible = slot2visible = slot3visible = false;
+                ApplyVisibility();
+
+                // small pause to make hide readable
+                yield return new WaitForSeconds(0.15f);
+
+                // 2) Show UI again and play pre-pick delay (the "animation")
+                rootVisible = true;
+                slot1visible = slot2visible = slot3visible = true;
+                ApplyVisibility();
+
+                yield return new WaitForSeconds(prePickDelay);
+
+                // 3) Randomize & display new results
+                results = DoRandomizeAndDisplay();
+
+                // Notify listeners about the new spin result
+                OnSpinResult?.Invoke(results);
+                SpinResultEvent?.Invoke(results);
+
+                // After reveal, leave visible so player can press R again or E to accept.
+            }
+            // Accept pressed
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                // Notify accept listeners
+                OnAcceptResult?.Invoke(results);
+                OnAccept?.Invoke();
+                accepted = true;
+                break;
+            }
+
+            yield return null;
+        }
+
+        // After accept: hide sprites and UI
         if (emptySprite)
         {
             if (slot1Image) slot1Image.sprite = emptySprite;
@@ -166,12 +270,23 @@ public class SlotMachineScriptWoj : MonoBehaviour
             if (slot3Image) slot3Image.sprite = emptySprite;
         }
 
-        // Only subtract time if we actually resolved a PlayerTime component
-        //pt.SubtractTime(20);
-
         rootVisible = false;
         slot1visible = slot2visible = slot3visible = false;
         ApplyVisibility();
+
+        // --- IMPORTANT: either destroy OR hide-and-keep ---
+        if (destroyOnAccept)
+        {
+            // allow OnDestroy to clear the static instance
+            Destroy(gameObject);
+        }
+        else
+        {
+            // Keep the instance so other enemies that hold a reference don't see it go null.
+            // We leave activeInstance pointing to this object so inspector references remain valid.
+            // Deactivate the GameObject to hide it from scene until reused.
+            gameObject.SetActive(false);
+        }
     }
 
     void SetSlotSprite(Image img, int number)

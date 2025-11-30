@@ -50,12 +50,21 @@ public class Przeciwnik1DawidAIcs : MonoBehaviour
     }
 
     void Die()
-    {
-        if (dropOnDeath && lootPrefab != null)
-            Instantiate(lootPrefab, transform.position, Quaternion.identity);
+{
+    if (dropOnDeath && lootPrefab != null)
+        Instantiate(lootPrefab, transform.position, Quaternion.identity);
 
-        Destroy(gameObject);
+    // If this enemy is the boss, trigger win UI.
+    // Use name comparison OR set a tag "Boss" on the boss GameObject and check CompareTag("Boss").
+    if (gameObject.name == "Enemi3" || CompareTag("Boss"))
+    {
+        Debug.Log("Boss defeated! Player wins.");
+        GameUIController.Instance?.ShowWin("Boss defeated! You won!");
     }
+
+    Destroy(gameObject);
+}
+
 
     private void OnTriggerEnter(Collider other)
     {
