@@ -2,38 +2,38 @@ using UnityEngine;
 
 public class EnemyAIDawid2 : MonoBehaviour
 {
-    public Transform player;       // pozycja gracza
-    public float speed = 3f;       // prêdkoœæ ruchu
-    public bool isActive = false;  // czy aktywowany
+    public Transform player;
+    public float speed = 3f;
+    public bool isActive = false;
 
-    // --- NOWE: zdrowie + loot ---
+    // --------- NOWE: system zdrowia + loot ---------
     public int health = 100;
     public GameObject lootPrefab;
     public bool dropOnDeath = true;
+
+    public SlotMachineScriptWoj slotMachine;
+
+    // ------------------ AI --------------------------
+
+
 
     void Update()
     {
         if (isActive && player != null)
         {
-            // kierunek do gracza
             Vector3 direction = (player.position - transform.position).normalized;
-
-            // ruch w stronê gracza
             transform.position += direction * speed * Time.deltaTime;
-
-            // obrót w stronê gracza
             transform.LookAt(player);
         }
     }
 
-    // wywo³ywane z triggera ActivationZone
     public void Activate()
     {
         isActive = true;
-        Debug.Log("Enemy2: wróg aktywowany! Rusza w stronê gracza.");
+        Debug.Log("Wrï¿½g aktywowany! Rusza w stronï¿½ gracza.");
     }
 
-    // --- obra¿enia ---
+    // --------- NOWE: otrzymywanie obraï¿½eï¿½ -----------
     public void TakeDamage(int dmg)
     {
         health -= dmg;
@@ -42,7 +42,7 @@ public class EnemyAIDawid2 : MonoBehaviour
             Die();
     }
 
-    // --- œmieræ + drop ---
+    // --------- NOWE: ï¿½mierï¿½ + drop ------------------
     void Die()
     {
         if (dropOnDeath && lootPrefab != null)
@@ -51,15 +51,21 @@ public class EnemyAIDawid2 : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // --- dotkniêcie gracza = 100 dmg ---
+    // --------- NOWE: dotkniï¿½cie gracza = 100 dmg ----
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Enemy2 OnTriggerEnter z: " + other.name);
-
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Enemy2 dotkn¹³ gracza -> otrzymuje 100 dmg.");
+            Debug.Log("Wrï¿½g dotknï¿½ï¿½ gracza -> otrzymuje 100 dmg.");
+            slotMachine.TriggerSpin();
             TakeDamage(100);
+            PlayerHealth ph = other.GetComponentInParent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(20);
+            }
+
+
         }
     }
 }

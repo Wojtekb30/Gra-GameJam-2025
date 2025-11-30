@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
-
+using TMPro;
+using System;
 public class PlayerStamina : MonoBehaviour
 {
     public int maxStamina = 100;
     public int currentStamina;
-    public Text staminaTextUI;
+    public TextMeshProUGUI staminaTextUI;
 
 
 
@@ -20,11 +21,11 @@ public class PlayerStamina : MonoBehaviour
         if (currentStamina >= amount)
         {
             currentStamina -= amount;
-            Debug.Log("Zu¿yto " + amount + " staminy. Pozosta³o: " + currentStamina);
+            Debug.Log("Zuï¿½yto " + amount + " staminy. Pozostaï¿½o: " + currentStamina);
         }
         else
         {
-            Debug.Log("Za ma³o staminy!");
+            Debug.Log("Za maï¿½o staminy!");
         }
 
         UpdateStaminaUI();

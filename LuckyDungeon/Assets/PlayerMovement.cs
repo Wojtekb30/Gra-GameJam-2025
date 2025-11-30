@@ -53,14 +53,25 @@ public class PlayerMovement : MonoBehaviour
         {
             if (slotMachine != null)
             {
-                slotMachine.TriggerSpin();
+                //slotMachine.TriggerSpin();
             }
 
         }
 
-        // ----------------------------------------
-        // 🟥 NEW: Press Escape to quit the game
-        // ----------------------------------------
+        if (Input.GetKeyDown(KeyCode.F1)) { 
+            mouseSensitivity -= 50f; 
+            if (mouseSensitivity<50f) { mouseSensitivity = 50f; }
+            Debug.Log("Current mouse sensitivity: "+ mouseSensitivity);
+            
+            }
+        if (Input.GetKeyDown(KeyCode.F2)) { 
+            mouseSensitivity += 50f; 
+            Debug.Log("Current mouse sensitivity: "+ mouseSensitivity);
+            }
+        if (Input.GetKeyDown(KeyCode.F3)) {
+            if (invertY) { invertY = false; } else { invertY = true; } 
+             }
+        
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Application.Quit();
