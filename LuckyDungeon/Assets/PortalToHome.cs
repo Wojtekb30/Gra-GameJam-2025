@@ -8,7 +8,7 @@ public class PortalToHome : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Teleportacja do bazy...");
+            Debug.Log("Teleportacja do bazy..."+other);
             SceneManager.LoadScene(sceneid); // nazwa sceny
         }
     }
