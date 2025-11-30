@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System;
 
 public class PlayerMana : MonoBehaviour
 {
     public int maxMana = 100;
     public int currentMana;
-    public Text manaTextUI;
+    public TextMeshProUGUI manaTextUI;
 
 
     void Start()
@@ -19,11 +21,11 @@ public class PlayerMana : MonoBehaviour
         if (currentMana >= amount)
         {
             currentMana -= amount;
-            Debug.Log("Zu¿yto " + amount + " many. Pozosta³o: " + currentMana);
+            Debug.Log("Zuï¿½yto " + amount + " many. Pozostaï¿½o: " + currentMana);
         }
         else
         {
-            Debug.Log("Za ma³o many!");
+            Debug.Log("Za maï¿½o many!");
         }
 
         UpdateManaUI();

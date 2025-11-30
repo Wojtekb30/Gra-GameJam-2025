@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System;
 
 public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 100;
     public int currentHealth;
-    public Text healthTextUI;
+    public TextMeshProUGUI healthTextUI;
 
     void Start()
     {
@@ -16,7 +18,7 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(int dmg)
     {
         currentHealth -= dmg;
-        Debug.Log("Gracz otrzyma³ " + dmg + " obra¿eñ. Aktualne zdrowie: " + currentHealth);
+        Debug.Log("Gracz otrzymaï¿½ " + dmg + " obraï¿½eï¿½. Aktualne zdrowie: " + currentHealth);
 
         if (currentHealth <= 0)
         {
@@ -39,8 +41,8 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Gracz umar³!");
-        // TODO: tu mo¿esz daæ respawn, ekran œmierci itp.
+        Debug.Log("Gracz umarï¿½!");
+        // TODO: tu moï¿½esz daï¿½ respawn, ekran ï¿½mierci itp.
     }
 
     void UpdateHealthUI()

@@ -9,6 +9,8 @@ public class IntArrayEvent : UnityEvent<int[]> { }
 
 public class SlotMachineScriptWoj : MonoBehaviour
 {
+    public PlayerTime playerTime;               // assign in inspector (optional)
+
     [Header("Symbol Settings")]
     [Tooltip("How many symbols can be randomly selected (1..symbolCount). Must match number of sprites.")]
     public int symbolCount = 5;
@@ -37,19 +39,33 @@ public class SlotMachineScriptWoj : MonoBehaviour
     public CanvasGroup canvasGroup;
     public Sprite emptySprite;
 
-    Image slot1Image;
-    Image slot2Image;
-    Image slot3Image;
+    private Image slot1Image;
+    private Image slot2Image;
+    private Image slot3Image;
 
-    Transform slot1Transform;
-    Transform slot2Transform;
-    Transform slot3Transform;
+    private Transform slot1Transform;
+    private Transform slot2Transform;
+    private Transform slot3Transform;
+
+    // <-- the corrected reference
+    private PlayerTime pt;
 
     private static readonly string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     void Awake()
     {
-        // Ensure CanvasGroup
+        // Resolve PlayerTime reference
+        if (playerTime != null)
+            pt = playerTime;
+        else
+        {
+            // Try to find it on a parent of this GameObject
+            pt = GetComponentInParent<PlayerTime>();
+            if (pt == null)
+                Debug.LogWarning($"{name}: No PlayerTime component found. Time subtraction will be skipped.");
+        }
+
+        // Ensure CanvasGroup exists
         if (canvasGroup == null)
         {
             canvasGroup = GetComponent<CanvasGroup>();
@@ -125,7 +141,7 @@ public class SlotMachineScriptWoj : MonoBehaviour
 
         yield return new WaitForSeconds(prePickDelay);
 
-        // 1..symbolCount
+        // 1..symbolCount (inclusive)
         int r1 = UnityEngine.Random.Range(1, symbolCount + 1);
         int r2 = UnityEngine.Random.Range(1, symbolCount + 1);
         int r3 = UnityEngine.Random.Range(1, symbolCount + 1);
@@ -147,6 +163,9 @@ public class SlotMachineScriptWoj : MonoBehaviour
             if (slot2Image) slot2Image.sprite = emptySprite;
             if (slot3Image) slot3Image.sprite = emptySprite;
         }
+
+        // Only subtract time if we actually resolved a PlayerTime component
+        pt.SubtractTime(20);
 
         rootVisible = false;
         slot1visible = slot2visible = slot3visible = false;
