@@ -373,7 +373,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   maxTime: 200
-  startTime: 100
+  startTime: 120
   timeText: {fileID: 129309952}
 --- !u!114 &129309952
 MonoBehaviour:
@@ -1636,7 +1636,7 @@ MonoBehaviour:
   player: {fileID: 1455941694}
   speed: 3
   isActive: 0
-  health: 100
+  health: 200
   lootPrefab: {fileID: 0}
   dropOnDeath: 0
   slotMachine: {fileID: 907082566}
@@ -2662,6 +2662,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a29ecbfff361a190bf81d1640ed3f3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  destroyOnAccept: 0
   playerTime: {fileID: 129309951}
   symbolCount: 12
   slotSprites:
@@ -2683,8 +2684,14 @@ MonoBehaviour:
   slot2visible: 0
   slot3visible: 0
   prePickDelay: 2
-  postResultDelay: 2
+  postResultDelay: 1
   OnSpinResult:
+    m_PersistentCalls:
+      m_Calls: []
+  OnAccept:
+    m_PersistentCalls:
+      m_Calls: []
+  OnAcceptResult:
     m_PersistentCalls:
       m_Calls: []
   canvasGroup: {fileID: 0}
