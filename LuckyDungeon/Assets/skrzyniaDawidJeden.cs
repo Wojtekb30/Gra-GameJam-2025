@@ -1,27 +1,41 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class ChestGold : MonoBehaviour
 {
-    private int minGold = 10;
-    private int maxGold = 20;
-    private bool oneTimeOnly = true;
+    [Header("Gold range")]
+    [SerializeField] private int minGold = 10;
+    [SerializeField] private int maxGold = 20;
+
+    [Header("Chest settings")]
+    [SerializeField] private bool oneTimeOnly = true;
+
+    // Assign the playerâ€™s GoldTextScript1 component in the Inspector
+    public GoldTextScript1 goldScript;   // can also be set at runtime
 
     private bool opened = false;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!opened && other.CompareTag("Player"))
+        // Ensure we only react to the player and that the chest isnâ€™t already opened
+        if (opened || !other.CompareTag("Player")) return;
+
+        opened = true;
+
+        int amount = Random.Range(minGold, maxGold + 1);
+
+        if (goldScript != null)
         {
-            opened = true;
+            goldScript.AddGold(amount);
+        }
+        else
+        {
+            Debug.LogWarning("ChestGold: GoldTextScript1 reference not set.");
+        }
 
-            int gold = Random.Range(minGold, maxGold + 1); // 10–20
-            Debug.Log("Skrzynia: wylosowano " + gold + " sztuk z³ota.");
-
-            // TODO: tu mo¿esz dodaæ z³oto graczowi, np.:
-            // other.GetComponent<PlayerGold>()?.AddGold(gold);
-
-            if (!oneTimeOnly)
-                opened = false; // jeœli chcesz, ¿eby da³o siê otwieraæ wiele razy
+        // Allow reâ€‘opening if the chest is not oneâ€‘time only
+        if (!oneTimeOnly)
+        {
+            opened = false;
         }
     }
 }
